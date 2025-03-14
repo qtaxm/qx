@@ -62,10 +62,6 @@ function main_menu() {
     esac
 }
 
-# 检查并安装 aios-cli
+# 执行主菜单
 check_and_install_aios_cli
-
-# 显示主菜单
-while true; do
-    main_menu
-done
+main_menu
