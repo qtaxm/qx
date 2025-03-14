@@ -1,18 +1,28 @@
 #!/bin/bash
 
-# 设置屏幕会话名称
-SCREEN_NAME="hyper"
+# 日志文件路径
 LOG_FILE="/root/aios-cli.log"
 
-# 检查并安装 aios-cli
-function check_and_install_aios_cli() {
-    if ! command -v aios-cli &>/dev/null; then
-        echo "aios-cli 未安装，正在安装..."
-        curl -sSL https://download.hyper.space/api/install | bash
-        source /root/.bashrc
-    else
-        echo "aios-cli 已安装。"
-    fi
+# 主菜单函数
+function main_menu() {
+    while true; do
+        clear
+        echo "==================== 主菜单 ===================="
+        echo "1. 重启节点"
+        echo "2. 查看日志"
+        echo "3. 查询积分"
+        echo "4. 退出脚本"
+        echo "==============================================="
+        read -p "请输入选择 (1/2/3/4): " choice
+
+        case $choice in
+            1) restart_node ;;
+            2) view_logs ;;
+            3) check_points ;;
+            4) exit_script ;;
+            *) echo "无效选择，请重新输入！"; sleep 2 ;;
+        esac
+    done
 }
 
 # 重启节点
@@ -21,47 +31,31 @@ function restart_node() {
     aios-cli kill
     sleep 2
     echo "正在启动新节点..."
-    screen -S "$SCREEN_NAME" -X quit
+    aios-cli start --connect >> "$LOG_FILE" 2>&1 &
     sleep 2
-    screen -S "$SCREEN_NAME" -dm
-    screen -S "$SCREEN_NAME" -X stuff "aios-cli start --connect >> $LOG_FILE 2>&1\n"
     echo "节点已重启。"
+    read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
 # 查看日志
 function view_logs() {
-    if [ -f "$LOG_FILE" ]; then
-        echo "显示日志的最后 100 行:"
-        tail -n 100 "$LOG_FILE"
-    else
-        echo "日志文件不存在: $LOG_FILE"
-    fi
+    echo "显示日志的最后 100 行:"
+    tail -n 100 "$LOG_FILE"
+    read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
 # 查询积分
 function check_points() {
+    echo "当前积分:"
     aios-cli hive points
+    read -n 1 -s -r -p "按任意键返回主菜单..."
 }
 
-# 主菜单
-function main_menu() {
-    clear
-    echo "====================================="
-    echo "1. 重启节点"
-    echo "2. 查看日志"
-    echo "3. 查询积分"
-    echo "4. 退出"
-    echo "====================================="
-    read -p "请输入选择 (1/2/3/4): " choice
-    case $choice in
-        1) restart_node ;;
-        2) view_logs ;;
-        3) check_points ;;
-        4) exit 0 ;;
-        *) echo "无效选择，请重新输入！"; sleep 2; main_menu ;;
-    esac
+# 退出脚本
+function exit_script() {
+    echo "退出脚本..."
+    exit 0
 }
 
-# 执行主菜单
-check_and_install_aios_cli
+# 调用主菜单函数
 main_menu
